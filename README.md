@@ -1,1 +1,2 @@
 # snakecharmer
+This is an extremely small project that automatically binds [cobra](https://github.com/spf13/cobra) and [viper](https://github.com/spf13/viper) together in a CLI implementation. It is yanked directly from the fantastic post and code by [carolynvs](https://github.com/carolynvs) at https://github.com/carolynvs/stingoftheviper/. All I've done is rework it slightly for use as an importable library.
