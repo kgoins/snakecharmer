@@ -27,6 +27,14 @@ type SnakeCharmer struct {
 	defaultConfName string
 }
 
+// NewSnakeCharmer constructs a new SnakeCharmer
+func NewSnakeCharmer(envPrefix string, confName string) SnakeCharmer {
+	return SnakeCharmer{
+		envPrefix:       envPrefix,
+		defaultConfName: confName,
+	}
+}
+
 // InitConfig imports values from viper into the input cmd object
 // to form a single consistent view of config information
 func (sc SnakeCharmer) InitConfig(cmd *cobra.Command, confPath string) error {
