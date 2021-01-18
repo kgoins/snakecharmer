@@ -10,21 +10,30 @@ import (
 	"github.com/spf13/viper"
 )
 
-// InitConfig imports values from viper into the input cmd object
-// to form a single consistent view of config information
 /* Example:
 var rootCmd = &cobra.Command{
 	Use:   "cli",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return cliutils.InitConfig(cmd, ".mycli", "MYCLI")
+		snakeCharmer := snakecharmer.NewSnakeCharmer(".mycli", "MYCLI")
+		confPath, _ := cmd.Flags().GetString("conf")
+		return cliutils.InitConfig(cmd, confPath)
 	},
 }
 */
-func InitConfig(cmd *cobra.Command, defaultConfFileName string, envPrefix string) error {
+
+// SnakeCharmer binds a viper instance to a cobra.Command instance
+type SnakeCharmer struct {
+	envPrefix       string
+	defaultConfName string
+}
+
+// InitConfig imports values from viper into the input cmd object
+// to form a single consistent view of config information
+func (sc SnakeCharmer) InitConfig(cmd *cobra.Command, confPath string) error {
 	v := viper.New()
 
 	// Set the base name of the config file, without the file extension.
-	v.SetConfigName(defaultConfFileName)
+	v.SetConfigName(sc.defaultConfName)
 
 	home, err := homedir.Dir()
 	if err != nil {
@@ -33,6 +42,10 @@ func InitConfig(cmd *cobra.Command, defaultConfFileName string, envPrefix string
 
 	v.AddConfigPath(".")
 	v.AddConfigPath(home)
+
+	if confPath != "" {
+		v.AddConfigPath(confPath)
+	}
 
 	// Attempt to read the config file, gracefully ignoring errors
 	// caused by a config file not being found. Return an error
@@ -48,7 +61,7 @@ func InitConfig(cmd *cobra.Command, defaultConfFileName string, envPrefix string
 	// environment variables are prefixed, e.g. a flag like --number
 	// binds to an environment variable STING_NUMBER. This helps
 	// avoid conflicts.
-	v.SetEnvPrefix(envPrefix)
+	v.SetEnvPrefix(sc.envPrefix)
 
 	// Bind to environment variables
 	// Works great for simple config names, but needs help for names
@@ -56,18 +69,18 @@ func InitConfig(cmd *cobra.Command, defaultConfFileName string, envPrefix string
 	v.AutomaticEnv()
 
 	// Bind the current command's flags to viper
-	bindFlags(cmd, v, envPrefix)
+	sc.bindFlags(cmd, v)
 
 	return nil
 }
 
-func bindFlags(cmd *cobra.Command, v *viper.Viper, envPrefix string) {
+func (sc SnakeCharmer) bindFlags(cmd *cobra.Command, v *viper.Viper) {
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent
 		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
 		if strings.Contains(f.Name, "-") {
 			envVarSuffix := strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
-			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", envPrefix, envVarSuffix))
+			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", sc.envPrefix, envVarSuffix))
 		}
 
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
