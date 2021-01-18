@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// InitConfig binds the cobra cmds and viper together
+// InitConfig imports values from viper into the input cmd object
 // to form a single consistent view of config information
 /* Example:
 var rootCmd = &cobra.Command{
