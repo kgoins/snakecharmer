@@ -36,23 +36,25 @@ func NewSnakeCharmer(envPrefix string, confName string) SnakeCharmer {
 }
 
 // InitConfig imports values from viper into the input cmd object
-// to form a single consistent view of config information
+// to form a single consistent view of config information.
+// Passing an empty confPath will cause viper to look in the current
+// and home directories for a config file.
 func (sc SnakeCharmer) InitConfig(cmd *cobra.Command, confPath string) error {
 	v := viper.New()
 
-	// Set the base name of the config file, without the file extension.
-	v.SetConfigName(sc.defaultConfName)
-
-	home, err := homedir.Dir()
-	if err != nil {
-		return err
-	}
-
-	v.AddConfigPath(".")
-	v.AddConfigPath(home)
-
 	if confPath != "" {
-		v.AddConfigPath(confPath)
+		v.SetConfigFile(confPath)
+	} else {
+		// Set the base name of the config file, without the file extension.
+		v.SetConfigName(sc.defaultConfName)
+
+		home, err := homedir.Dir()
+		if err != nil {
+			return err
+		}
+
+		v.AddConfigPath(".")
+		v.AddConfigPath(home)
 	}
 
 	// Attempt to read the config file, gracefully ignoring errors
